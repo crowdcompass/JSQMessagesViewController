@@ -275,10 +275,11 @@
     if ([self.delegate respondsToSelector:@selector(shouldDisplayTimestampForRowAtIndexPath:)]) {
         displayTimestamp = [self.delegate shouldDisplayTimestampForRowAtIndexPath:indexPath];
     }
-    
+    CGFloat maxWidth = CGRectGetWidth(self.tableView.bounds);
     return [JSBubbleMessageCell neededHeightForBubbleMessageCellWithMessage:message
                                                              displaysAvatar:avatar != nil
-                                                          displaysTimestamp:displayTimestamp];
+                                                          displaysTimestamp:displayTimestamp
+														 constrainedToWidth:maxWidth];
 }
 
 #pragma mark - Messages view controller

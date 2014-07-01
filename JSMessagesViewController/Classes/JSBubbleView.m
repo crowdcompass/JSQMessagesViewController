@@ -32,10 +32,11 @@
 - (void)addTextViewObservers;
 - (void)removeTextViewObservers;
 
-+ (CGSize)textSizeForText:(NSString *)txt;
-+ (CGSize)neededSizeForText:(NSString *)text;
-+ (CGFloat)neededHeightForText:(NSString *)text;
++ (CGSize)textSizeForText:(NSString *)txt constrainedToWidth:(CGFloat)maxWidth;
++ (CGSize)neededSizeForText:(NSString *)text constrainedToWidth:(CGFloat)maxWidth;
+//+ (CGFloat)neededHeightForText:(NSString *)text;
 
++ (CGFloat)constrainedWidthFromMaxWidth:(CGFloat)maxWidth;
 @end
 
 
@@ -176,7 +177,8 @@
 
 - (CGRect)bubbleFrame
 {
-    CGSize bubbleSize = [JSBubbleView neededSizeForText:self.textView.text];
+	CGFloat maxWidth = CGRectGetWidth(self.superview.bounds);
+    CGSize bubbleSize = [JSBubbleView neededSizeForText:self.textView.text constrainedToWidth:maxWidth];
     
     return CGRectIntegral(CGRectMake((self.type == JSBubbleMessageTypeOutgoing ? self.frame.size.width - bubbleSize.width : 0.0f),
                                      kMarginTop,
@@ -185,6 +187,10 @@
 }
 
 #pragma mark - Layout
++ (CGFloat)constrainedWidthFromMaxWidth:(CGFloat)maxWidth
+{
+	return (maxWidth * 0.7) - kBubblePaddingRight;
+}
 
 - (void)layoutSubviews
 {
@@ -208,9 +214,10 @@
 
 #pragma mark - Bubble view
 
-+ (CGSize)textSizeForText:(NSString *)txt
++ (CGSize)textSizeForText:(NSString *)txt constrainedToWidth:(CGFloat)maxWidth
 {
-    CGFloat maxWidth = [UIScreen mainScreen].applicationFrame.size.width * 0.70f;
+	CGFloat constrainedWidth = [JSBubbleView constrainedWidthFromMaxWidth:maxWidth];
+//    CGFloat maxWidth = [UIScreen mainScreen].applicationFrame.size.width * 0.70f;
     CGFloat maxHeight = MAX([JSMessageTextView numberOfLinesForMessage:txt],
                          [txt js_numberOfLines]) * [JSMessageInputView textViewLineHeight];
     maxHeight += kJSAvatarImageSize;
@@ -218,7 +225,7 @@
     CGSize stringSize;
     
     if (NSFoundationVersionNumber > NSFoundationVersionNumber_iOS_6_0) {
-        CGRect stringRect = [txt boundingRectWithSize:CGSizeMake(maxWidth, maxHeight)
+        CGRect stringRect = [txt boundingRectWithSize:CGSizeMake(constrainedWidth, maxHeight)
                                               options:NSStringDrawingUsesLineFragmentOrigin
                                            attributes:@{ NSFontAttributeName : [[JSBubbleView appearance] font] }
                                               context:nil];
@@ -227,23 +234,23 @@
     }
     else {
         stringSize = [txt sizeWithFont:[[JSBubbleView appearance] font]
-                     constrainedToSize:CGSizeMake(maxWidth, maxHeight)];
+                     constrainedToSize:CGSizeMake(constrainedWidth, maxHeight)];
     }
     
     return CGSizeMake(roundf(stringSize.width), roundf(stringSize.height));
 }
 
-+ (CGSize)neededSizeForText:(NSString *)text
++ (CGSize)neededSizeForText:(NSString *)text constrainedToWidth:(CGFloat)maxWidth
 {
-    CGSize textSize = [JSBubbleView textSizeForText:text];
+    CGSize textSize = [JSBubbleView textSizeForText:text constrainedToWidth:maxWidth];
     
 	return CGSizeMake(textSize.width + kBubblePaddingRight,
                       textSize.height + kPaddingTop + kPaddingBottom);
 }
 
-+ (CGFloat)neededHeightForText:(NSString *)text
++ (CGFloat)neededHeightForText:(NSString *)text constrainedToWidth:(CGFloat)maxWidth
 {
-    CGSize size = [JSBubbleView neededSizeForText:text];
+    CGSize size = [JSBubbleView neededSizeForText:text constrainedToWidth:maxWidth];
     return size.height + kMarginTop + kMarginBottom;
 }
 
